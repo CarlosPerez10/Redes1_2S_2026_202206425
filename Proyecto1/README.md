@@ -453,7 +453,18 @@ El beneficio adicional, y menos evidente, es su interacción con STP. Sin agrega
 
 *Figura 12. `show etherchannel summary` en `SW-CORE`: los cuatro canales configurados con protocolo PAgP.*
 
-**Estado de validación.** _[Completar según la respuesta del auxiliar. Si los canales no llegaron a formarse: documentar que la configuración se verificó idéntica en ambos extremos —modo troncal, encapsulación 802.1Q, VLAN nativa 95, número de channel-group y modo PAgP—, que los puertos físicos se confirmaron en estado `connected` mediante `show interfaces status`, y que el canal no alcanzó el estado `SU` en la versión de Packet Tracer utilizada.]_
+**Estado de validación.** Los cuatro canales operan correctamente, verificado
+mediante `show etherchannel summary`: `Po1(SU)`, `Po2(SU)`, `Po3(SU)` y `Po4(SU)`,
+con la totalidad de los puertos miembros en estado `(P)` — integrados al canal.
+
+La formación de los canales requirió que la interfaz lógica `Port-channel` y sus
+puertos físicos coincidieran en la totalidad de sus parámetros. Dos desajustes
+impidieron inicialmente la agregación: la VLAN nativa, configurada como 95 en los
+puertos físicos pero con el valor por defecto en la interfaz Port-channel, y
+posteriormente la lista de VLANs permitidas. El mensaje `%EC-5-CANNOT_BUNDLE2`
+identificó cada incompatibilidad de forma explícita. Adicionalmente fue necesario
+reiniciar los switches tras guardar la configuración para forzar la renegociación
+de PAgP.
 
 ### 10.4 Seguridad básica
 
@@ -976,7 +987,8 @@ Ejecutado adicionalmente en `SW-IDD-A` para la VLAN 25, donde se observa el puer
 
 Ejecutado en `SW-CORE`. La captura correspondiente se presenta en la Figura 12 de la sección 10.3.
 
-_[Documentar el estado obtenido según la resolución del caso.]_
+La salida confirma los cuatro canales en estado `SU` (Layer2, in use) con todos
+los puertos miembros en `(P)`, operando bajo protocolo PAgP conforme al carné impar.
 
 ### 12.4 Pruebas de conectividad
 
@@ -1076,7 +1088,7 @@ _[Capturar una PDU de VTP. Identificar el VTP Domain Name (`Smart_2`) y el Confi
 | 12 | Dominio VTP `Smart_2` con contraseña | §10.1, §11 | Cumplido |
 | 13 | VLANs 15/25/35/45/55 con nombres exactos | §8 | Cumplido |
 | 14 | VLAN nativa 95 en todos los troncales | §10.4 | Cumplido |
-| 15 | EtherChannel con PAgP | §10.3 | _[Según validación]_ |
+| 15 | EtherChannel con PAgP | §10.3 | Cumplido |
 | 16 | Rapid-PVST con root bridge justificado | §10.2 | Cumplido |
 | 17 | Banner MOTD en switches de distribución | §10.4 | Cumplido |
 | 18 | Tabla de dominios de colisión | §6 | Cumplido |
@@ -1084,7 +1096,7 @@ _[Capturar una PDU de VTP. Identificar el VTP Domain Name (`Smart_2`) y el Confi
 | 20 | Tabla de asignación de puertos | §9 | Cumplido |
 | 21 | Comandos por dispositivo | §11 | Cumplido |
 | 22 | Evidencia `show spanning-tree` | §12.2 | Cumplido |
-| 23 | Evidencia `show etherchannel summary` | §12.3 | _[Según validación]_ |
+| 23 | Evidencia `show etherchannel summary` | §12.3 | Cumplido |
 | 24 | Evidencia `show interfaces trunk` | §12.1 | Cumplido |
 | 25 | Etiquetado de medios en Packet Tracer | §5 | Cumplido |
 | 26 | Presupuesto de equipos | §13 | _[Pendiente]_ |
