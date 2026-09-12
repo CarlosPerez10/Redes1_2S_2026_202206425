@@ -466,6 +466,18 @@ identificó cada incompatibilidad de forma explícita. Adicionalmente fue necesa
 reiniciar los switches tras guardar la configuración para forzar la renegociación
 de PAgP.
 
+El efecto de la agregación sobre el árbol de expansión es directamente observable
+en la topología. Antes de formar los canales, Spanning Tree bloqueaba los enlaces
+paralelos hacia el núcleo por considerarlos bucles independientes. Una vez agregados,
+la totalidad de esos enlaces pasa a estado de reenvío y los únicos puertos bloqueados
+son los correspondientes a los tres bucles de redundancia previstos en el diseño.
+
+![Topología tras la formación de los EtherChannel](img/11a-topologia-post-etherchannel.png)
+
+*Figura 12b. Topología con los cuatro EtherChannel operativos. Los enlaces del backbone
+se encuentran en estado de reenvío y solo permanecen bloqueados los puertos de los
+bucles de redundancia, en contraste con el estado previo mostrado en la Figura 1.*
+
 ### 10.4 Seguridad básica
 
 | Medida | Alcance | Configuración |
@@ -998,7 +1010,7 @@ Prueba ejecutada desde `PC-IDD-1` (192.168.25.11), equipo conectado a `SW-IDD-A`
 |---|---|---|---|---|---|
 | `PC-IDD-1` | `PC-IDD-8` (192.168.25.18) | 25 | 25 | Éxito | **4/4 paquetes, 0% pérdida** |
 | `PC-IDD-1` | `SRV-1` (192.168.45.11) | 25 | 45 | Fallo por aislamiento | **0/4 paquetes, 100% pérdida** |
-| `LAP-1` | `LAP-2` (192.168.55.12) | 55 | 55 | Éxito | _[Completar]_ |
+| `LAP-1` | `LAP-2` (192.168.55.12) | 55 | 55 | Éxito | **4/4 paquetes, 0% pérdida** |
 
 La primera prueba es la más significativa del proyecto: `PC-IDD-1` y `PC-IDD-8` están conectados a **switches distintos**, por lo que el tráfico atraviesa el enlace troncal entre `SW-IDD-A` y `SW-IDD-DIST`. Su éxito demuestra que la VLAN 25 se propagó correctamente y que el etiquetado 802.1Q funciona a través de la topología.
 
@@ -1011,14 +1023,21 @@ La primera prueba es la más significativa del proyecto: `PC-IDD-1` y `PC-IDD-8`
 *Figura 19. Ping desde `PC-IDD-1` (VLAN 25) hacia `SRV-1` (VLAN 45): 100% de pérdida. El resultado confirma el aislamiento entre dominios de broadcast.*
 
 La segunda prueba demuestra el aislamiento. La pérdida total no constituye un error sino la confirmación de que la segmentación cumple su propósito: sin un dispositivo de Capa 3, dos VLANs distintas no pueden comunicarse. Es exactamente el comportamiento que resuelve el problema original de mezclar tráfico administrativo con tráfico de invitados.
+![Ping entre laptops inalámbricas](img/15b-ping-wifi-visitantes.png)
+
+*Figura 19b. Ping entre `LAP-1` y `LAP-2`, ambas asociadas por radio a `AP-VISITAS`
+en la VLAN 55: 4 de 4 paquetes recibidos. Los tiempos de respuesta entre 37 y 79 ms
+corresponden al medio inalámbrico, frente a menos de 1 ms en los enlaces cableados.
+La prueba confirma que el segmento de visitantes opera correctamente de forma
+aislada del resto del campus.*
 
 ### 12.5 Pruebas de tolerancia a fallos
 
 | Escenario simulado | Comportamiento esperado | Resultado |
 |---|---|---|
-| Caída de `SW-IDD-DIST` | `SW-IDD-A` y `SW-IDD-B` conservan conectividad por el enlace directo entre ambos | _[Completar]_ |
-| Caída del enlace `SW-CORP-DIST` ↔ `SW-ALA-A` | El tráfico del ala A se reencamina por el enlace hacia el ala B | _[Completar]_ |
-| Caída de un enlace físico de un EtherChannel | El canal reduce su capacidad pero mantiene el servicio | _[Completar]_ |
+| Caída de `SW-IDD-DIST` | `SW-IDD-A` y `SW-IDD-B` conservan conectividad por el enlace directo entre ambos | **Conectividad restablecida tras la reconvergencia de Rapid-PVST** |
+| Caída del enlace `SW-CORP-DIST` ↔ `SW-ALA-A` | El tráfico del ala A se reencamina por el enlace hacia el ala B | **Conectividad mantenida por la ruta alterna entre alas** |
+| Caída de un enlace físico de un EtherChannel | El canal reduce su capacidad pero mantiene el servicio | **`Po2` permanece en `SU` con `Fa0/1(D)` y los tres puertos restantes en `(P)`** |
 
 ![Prueba de falla en el Centro de I+D](img/17-falla-idd.png)
 
@@ -1040,33 +1059,101 @@ El banner MOTD se verifica al establecer una nueva sesión de consola en cualqui
 
 ## 13. Presupuesto estimado
 
+El presupuesto contempla los equipos y materiales necesarios para implementar
+físicamente la topología simulada.
+
 | Equipo / Material | Modelo de referencia | Cantidad | Costo unitario (Q) | Subtotal (Q) |
 |---|---|---|---|---|
-| Switch multicapa (núcleo y distribución) | Cisco Catalyst 3560-24PS | 4 | | |
-| Switch de acceso | Cisco Catalyst 2960-24TT | 8 | | |
-| Hub (segmento legacy existente) | — | 1 | | |
-| Access Point | — | 1 | | |
-| Módulos transceptores de fibra (GBIC/SFP) | — | 8 | | |
-| Fibra óptica multimodo (m) | OM3 dúplex LC | _[metros]_ | | |
-| Cable UTP Cat 6 (m) | — | _[metros]_ | | |
-| Conectores RJ-45 | — | _[unidades]_ | | |
-| **Total** | | | | |
+| Switch multicapa (núcleo y distribución) | Cisco Catalyst 3560-24PS (reacondicionado) | 4 | 1,500.00 | 6,000.00 |
+| Switch de acceso | Cisco Catalyst 2960-24TT (reacondicionado) | 8 | 800.00 | 6,400.00 |
+| Hub (segmento legacy preexistente) | Hub 10/100 Mbps, 4 puertos | 1 | 0.00 | 0.00 |
+| Access Point | AP 802.11n | 1 | 600.00 | 600.00 |
+| Módulos transceptores de fibra | SFP 1000BASE-SX / 100BASE-FX | 14 | 250.00 | 3,500.00 |
+| Fibra óptica multimodo | OM3 dúplex LC-LC | 1,000 m | 7.00 | 7,000.00 |
+| Cable UTP Cat 6 | Bobina Cat 6 UTP | 1,000 m | 2.50 | 2,500.00 |
+| Conectores RJ-45 | Cat 6 blindado | 100 | 3.00 | 300.00 |
+| **Total** | | | | **26,300.00** |
 
-**Nota metodológica.** Los módulos de fibra se contabilizan de a dos por enlace, uno en cada extremo: cuatro para los dos enlaces de `Po1` hacia I+D y cuatro para los enlaces hacia Corporativo y Producción. El hub se incluye en el inventario por tratarse de equipo preexistente que el proyecto conserva de forma deliberada, sin costo de adquisición.
+### 13.1 Memoria de cálculo
 
-_[Completar con precios de mercado e indicar la fuente consultada y la fecha.]_
+**Switches.** Cuatro 3560-24PS para núcleo y distribución, justificados por sus
+puertos Gigabit y su soporte de EtherChannel. Ocho 2960-24TT para los switches de
+acceso, donde no se requiere capacidad multicapa. Al tratarse de modelos
+descontinuados por el fabricante, se cotizan equipos reacondicionados.
 
+**Módulos de fibra.** Se contabilizan dos por enlace, uno en cada extremo. Los
+enlaces de fibra son siete: dos hacia el Centro de I+D (`Po1`), cuatro hacia el
+Edificio Corporativo (`Po2`) y uno hacia la Planta de Producción. Total: 14
+módulos SFP.
+
+**Fibra óptica.** Estimación por distancia entre edificios: 300 m hacia I+D, 480 m
+hacia Corporativo y 200 m hacia Producción, con margen para holgura de instalación
+y terminaciones. Total aproximado: 1,000 m.
+
+**Cable UTP.** Cubre 14 enlaces de cobre entre switches y 24 enlaces hacia
+dispositivos finales, con un promedio estimado de 25 m por tramo. Total aproximado:
+1,000 m, equivalente a poco más de tres cajas estándar de 305 m.
+
+**Conectores.** Dos por enlace de cobre sobre 38 enlaces, más un 20% de margen por
+pérdidas durante el ponchado.
+
+**Hub.** Se incluye en el inventario con costo cero por tratarse de equipo
+preexistente que el proyecto conserva de forma deliberada, conforme al requerimiento
+de mantener el segmento legacy operativo.
+
+### 13.2 Fuentes consultadas
+
+Los precios corresponden a estimaciones del mercado guatemalteco a septiembre de 2026.
+
+Los switches Cisco y los módulos SFP reflejan costos promediados del mercado de
+equipo reacondicionado y plataformas de importación, dado que ambos modelos se
+encuentran descontinuados y no se comercializan como equipo nuevo.
+
+Los insumos de cableado —fibra óptica multimodo, bobinas de UTP Cat 6 y conectores—
+toman como referencia los precios al consumidor de distribuidores tecnológicos
+locales, entre ellos MacroSistemas y Sam's Club Guatemala.
 ---
 
-## 14. Anexo — Inspección de PDUs (alcance opcional)
+## 14. Anexo — Inspección de PDUs
+
+Inspección realizada en Modo Simulación de Packet Tracer, filtrando únicamente
+los protocolos STP y VTP.
 
 ### 14.1 BPDU de STP
 
-_[Capturar una BPDU en Modo Simulación filtrando únicamente STP. Identificar en el encabezado: Root ID (identificador del puente raíz), Bridge ID (identificador del puente emisor) y Root Path Cost (costo acumulado hacia la raíz).]_
+![PDU de Spanning Tree](img/22-pdu-stp.png)
+
+*Figura 22. BPDU capturada en Modo Simulación.*
+
+Los campos relevantes del encabezado son:
+
+| Campo | Contenido | Función |
+|---|---|---|
+| Root ID | Prioridad y MAC del puente raíz | Identifica al puente raíz elegido para esa VLAN. Todos los switches del dominio deben converger al mismo valor. |
+| Bridge ID | Prioridad y MAC del switch emisor | Identifica al switch que origina la BPDU. Cuando Root ID y Bridge ID coinciden, el emisor es la raíz. |
+| Root Path Cost | Costo acumulado hacia la raíz | Suma de los costos de los enlaces recorridos. Determina qué puerto queda en estado de reenvío y cuál se bloquea. |
+
+El costo refleja la velocidad del enlace: 4 para Gigabit Ethernet y 19 para
+FastEthernet. Esta diferencia es la que hace que STP prefiera de forma natural
+el enlace de mayor capacidad hacia el Centro de I+D.
 
 ### 14.2 PDU de VTP
 
-_[Capturar una PDU de VTP. Identificar el VTP Domain Name (`Smart_2`) y el Configuration Revision Number, que determina qué switch posee la base de datos de VLANs más reciente.]_
+![PDU de VTP](img/23-pdu-vtp.png)
+
+*Figura 23. PDU de VTP capturada en Modo Simulación.*
+
+| Campo | Contenido | Función |
+|---|---|---|
+| Management Domain Name | `Smart_2` | Delimita el dominio administrativo. Un switch solo procesa anuncios cuyo dominio coincida con el suyo. |
+| Configuration Revision Number | Contador incremental | Determina qué base de datos de VLANs es la más reciente. Un switch que recibe un anuncio con revisión mayor a la propia sobrescribe su base de datos local. |
+
+El número de revisión es el mecanismo que sincroniza las VLANs en todo el dominio
+sin intervención manual. También constituye el principal riesgo operativo de VTP:
+un switch introducido a la red con un número de revisión superior puede sobrescribir
+la configuración de VLANs del dominio completo, incluso operando en modo cliente.
+Este riesgo justifica la decisión documentada en §10.1 de mantener un único switch
+en modo Server.
 
 ---
 
@@ -1099,8 +1186,8 @@ _[Capturar una PDU de VTP. Identificar el VTP Domain Name (`Smart_2`) y el Confi
 | 23 | Evidencia `show etherchannel summary` | §12.3 | Cumplido |
 | 24 | Evidencia `show interfaces trunk` | §12.1 | Cumplido |
 | 25 | Etiquetado de medios en Packet Tracer | §5 | Cumplido |
-| 26 | Presupuesto de equipos | §13 | _[Pendiente]_ |
-| 27 | Inspección de PDUs (opcional) | §14 | _[Opcional]_ |
+| 26 | Presupuesto de equipos | §13 | Cumplido |
+| 27 | Inspección de PDUs (opcional) | §14 | Cumplido |
 
 ---
 
