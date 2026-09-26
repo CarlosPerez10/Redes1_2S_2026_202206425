@@ -1,0 +1,91 @@
+<mxfile host="app.diagrams.net">
+  <diagram id="act5" name="Actividad5 - InterVLAN">
+    <mxGraphModel dx="1400" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1380" pageHeight="800" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- ===== TITULO ===== -->
+        <mxCell id="title" value="Actividad Práctica 5 — Enrutamiento Inter-VLAN: ROAS vs Switch Capa 3 (SVI) | Redes 1 — 202206425" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1F3864;strokeColor=#1F3864;fontColor=#FFFFFF;fontStyle=1;fontSize=16;" vertex="1" parent="1">
+          <mxGeometry x="20" y="10" width="1330" height="40" as="geometry" />
+        </mxCell>
+
+        <!-- ===== ESCENARIO 1: ROAS ===== -->
+        <mxCell id="s1" value="ESCENARIO 1 — Router-on-a-Stick (ROAS)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;verticalAlign=top;fontStyle=1;fontSize=15;arcSize=3;" vertex="1" parent="1">
+          <mxGeometry x="20" y="60" width="650" height="600" as="geometry" />
+        </mxCell>
+        <mxCell id="s1v10" value="VLAN 10 — Marketing&lt;br&gt;192.168.10.0/24" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFE6CC;strokeColor=#D79B00;verticalAlign=top;fontStyle=1;arcSize=5;" vertex="1" parent="1">
+          <mxGeometry x="40" y="390" width="295" height="250" as="geometry" />
+        </mxCell>
+        <mxCell id="s1v20" value="VLAN 20 — Engineering&lt;br&gt;192.168.20.0/24" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E1D5E7;strokeColor=#9673A6;verticalAlign=top;fontStyle=1;arcSize=5;" vertex="1" parent="1">
+          <mxGeometry x="355" y="390" width="295" height="250" as="geometry" />
+        </mxCell>
+
+        <mxCell id="r1" value="&lt;b&gt;R1-ROAS&lt;/b&gt;&lt;br&gt;Cisco 2911" style="shape=mxgraph.cisco.routers.router;html=1;pointerEvents=1;dashed=0;fillColor=#036897;strokeColor=#ffffff;strokeWidth=2;verticalLabelPosition=bottom;verticalAlign=top;align=center;outlineConnect=0;" vertex="1" parent="1">
+          <mxGeometry x="305" y="110" width="80" height="53" as="geometry" />
+        </mxCell>
+        <mxCell id="r1note" value="&lt;b&gt;Subinterfaces&lt;/b&gt;&lt;br&gt;G0/0 → sin IP (no shutdown)&lt;br&gt;G0/0.10 → dot1Q 10 → 192.168.10.1/24&lt;br&gt;G0/0.20 → dot1Q 20 → 192.168.20.1/24" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#6C8EBF;align=left;spacingLeft=6;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="420" y="95" width="235" height="80" as="geometry" />
+        </mxCell>
+
+        <mxCell id="sw1" value="&lt;b&gt;SW1-L2&lt;/b&gt;&lt;br&gt;Cisco 2960" style="shape=mxgraph.cisco.switches.workgroup_switch;html=1;pointerEvents=1;dashed=0;fillColor=#036897;strokeColor=#ffffff;strokeWidth=2;verticalLabelPosition=bottom;verticalAlign=top;align=center;outlineConnect=0;" vertex="1" parent="1">
+          <mxGeometry x="300" y="270" width="90" height="45" as="geometry" />
+        </mxCell>
+
+        <mxCell id="pc1" value="&lt;b&gt;PC1-MKT&lt;/b&gt;&lt;br&gt;192.168.10.10/24&lt;br&gt;GW: 192.168.10.1" style="shape=mxgraph.cisco.computers_and_peripherals.pc;html=1;pointerEvents=1;dashed=0;fillColor=#036897;strokeColor=#ffffff;strokeWidth=2;verticalLabelPosition=bottom;verticalAlign=top;align=center;outlineConnect=0;" vertex="1" parent="1">
+          <mxGeometry x="152" y="460" width="70" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="pc2" value="&lt;b&gt;PC2-ENG&lt;/b&gt;&lt;br&gt;192.168.20.10/24&lt;br&gt;GW: 192.168.20.1" style="shape=mxgraph.cisco.computers_and_peripherals.pc;html=1;pointerEvents=1;dashed=0;fillColor=#036897;strokeColor=#ffffff;strokeWidth=2;verticalLabelPosition=bottom;verticalAlign=top;align=center;outlineConnect=0;" vertex="1" parent="1">
+          <mxGeometry x="467" y="460" width="70" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e_trunk" value="&lt;b&gt;TRUNK 802.1Q&lt;/b&gt;&lt;br&gt;R1 G0/0 ↔ SW1 G0/1" style="endArrow=none;html=1;strokeColor=#B85450;strokeWidth=3;labelBackgroundColor=#FFFFFF;fontSize=11;" edge="1" parent="1" source="r1" target="sw1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_pc1" value="SW1 Fa0/1&lt;br&gt;access VLAN 10" style="endArrow=none;html=1;strokeColor=#D79B00;strokeWidth=2;labelBackgroundColor=#FFFFFF;fontSize=10;" edge="1" parent="1" source="sw1" target="pc1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_pc2" value="SW1 Fa0/2&lt;br&gt;access VLAN 20" style="endArrow=none;html=1;strokeColor=#9673A6;strokeWidth=2;labelBackgroundColor=#FFFFFF;fontSize=10;" edge="1" parent="1" source="sw1" target="pc2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- ===== ESCENARIO 2: SVI ===== -->
+        <mxCell id="s2" value="ESCENARIO 2 — Switch Capa 3 (SVI)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#D5E8D4;strokeColor=#82B366;verticalAlign=top;fontStyle=1;fontSize=15;arcSize=3;" vertex="1" parent="1">
+          <mxGeometry x="700" y="60" width="650" height="600" as="geometry" />
+        </mxCell>
+        <mxCell id="s2v10" value="VLAN 10 — Marketing&lt;br&gt;172.16.10.0/24" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFE6CC;strokeColor=#D79B00;verticalAlign=top;fontStyle=1;arcSize=5;" vertex="1" parent="1">
+          <mxGeometry x="720" y="390" width="295" height="250" as="geometry" />
+        </mxCell>
+        <mxCell id="s2v20" value="VLAN 20 — Engineering&lt;br&gt;172.16.20.0/24" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E1D5E7;strokeColor=#9673A6;verticalAlign=top;fontStyle=1;arcSize=5;" vertex="1" parent="1">
+          <mxGeometry x="1035" y="390" width="295" height="250" as="geometry" />
+        </mxCell>
+
+        <mxCell id="mls" value="&lt;b&gt;MLS1-L3&lt;/b&gt;&lt;br&gt;Cisco 3650-24PS&lt;br&gt;ip routing" style="shape=mxgraph.cisco.switches.layer_3_switch;html=1;pointerEvents=1;dashed=0;fillColor=#036897;strokeColor=#ffffff;strokeWidth=2;verticalLabelPosition=bottom;verticalAlign=top;align=center;outlineConnect=0;" vertex="1" parent="1">
+          <mxGeometry x="993" y="140" width="64" height="64" as="geometry" />
+        </mxCell>
+        <mxCell id="mlsnote" value="&lt;b&gt;SVIs&lt;/b&gt;&lt;br&gt;interface Vlan10 → 172.16.10.1/24&lt;br&gt;interface Vlan20 → 172.16.20.1/24&lt;br&gt;ip routing ✔" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#82B366;align=left;spacingLeft=6;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="1100" y="95" width="235" height="80" as="geometry" />
+        </mxCell>
+
+        <mxCell id="pc3" value="&lt;b&gt;PC3-MKT&lt;/b&gt;&lt;br&gt;172.16.10.10/24&lt;br&gt;GW: 172.16.10.1" style="shape=mxgraph.cisco.computers_and_peripherals.pc;html=1;pointerEvents=1;dashed=0;fillColor=#036897;strokeColor=#ffffff;strokeWidth=2;verticalLabelPosition=bottom;verticalAlign=top;align=center;outlineConnect=0;" vertex="1" parent="1">
+          <mxGeometry x="832" y="460" width="70" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="pc4" value="&lt;b&gt;PC4-ENG&lt;/b&gt;&lt;br&gt;172.16.20.10/24&lt;br&gt;GW: 172.16.20.1" style="shape=mxgraph.cisco.computers_and_peripherals.pc;html=1;pointerEvents=1;dashed=0;fillColor=#036897;strokeColor=#ffffff;strokeWidth=2;verticalLabelPosition=bottom;verticalAlign=top;align=center;outlineConnect=0;" vertex="1" parent="1">
+          <mxGeometry x="1147" y="460" width="70" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e_pc3" value="MLS1 G1/0/1&lt;br&gt;access VLAN 10" style="endArrow=none;html=1;strokeColor=#D79B00;strokeWidth=2;labelBackgroundColor=#FFFFFF;fontSize=10;" edge="1" parent="1" source="mls" target="pc3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_pc4" value="MLS1 G1/0/2&lt;br&gt;access VLAN 20" style="endArrow=none;html=1;strokeColor=#9673A6;strokeWidth=2;labelBackgroundColor=#FFFFFF;fontSize=10;" edge="1" parent="1" source="mls" target="pc4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- ===== LEYENDA ===== -->
+        <mxCell id="legend" value="&lt;b&gt;LEYENDA&lt;/b&gt; &amp;nbsp;|&amp;nbsp; Azul #DAE8FC = Escenario ROAS &amp;nbsp;|&amp;nbsp; Verde #D5E8D4 = Escenario SVI &amp;nbsp;|&amp;nbsp; Naranja #FFE6CC = VLAN 10 Marketing &amp;nbsp;|&amp;nbsp; Morado #E1D5E7 = VLAN 20 Engineering &amp;nbsp;|&amp;nbsp; Línea roja gruesa = Trunk 802.1Q &amp;nbsp;|&amp;nbsp; Cables: cobre directo" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F5F5F5;strokeColor=#666666;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="20" y="680" width="1330" height="60" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
