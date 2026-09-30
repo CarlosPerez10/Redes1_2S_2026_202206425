@@ -1,0 +1,17 @@
+! =====================================================================
+!  Comandos de verificacion (usar para las capturas)
+! =====================================================================
+show vtp status
+show vlan brief
+show interfaces trunk
+show etherchannel summary
+show etherchannel port-channel
+show spanning-tree vlan 15
+show spanning-tree vlan 25
+show spanning-tree vlan 35
+show spanning-tree vlan 45
+show spanning-tree vlan 55
+show spanning-tree summary
+show ip route                 ! solo SW-Z1-CORE
+show ip interface brief
+show running-config

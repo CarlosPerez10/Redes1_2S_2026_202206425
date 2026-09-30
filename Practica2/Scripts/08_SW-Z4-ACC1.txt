@@ -1,0 +1,74 @@
+! =====================================================================
+!  Practica 2 - Redes de Computadoras 1 - 2S2026
+!  Red de la Ciudad Comercial Cayala   | Carnet: 202206425 (X = 5)
+!  Dispositivo : SW-Z4-ACC1
+!  Modelo      : Cisco 2960-24TT
+!  Rol         : Acceso Zona 4 (Paseo Cayala - Comercial). VTP Client
+!  Uso: copiar y pegar en la CLI (modo usuario). Las lineas con "!" son
+!       comentarios y el IOS las ignora.
+! =====================================================================
+!
+! #################### FASE 1: base + VTP + troncales ####################
+enable
+configure terminal
+hostname SW-Z4-ACC1
+no ip domain-lookup
+service password-encryption
+enable secret redes1
+banner motd #Acceso restringido - Red Ciudad Cayala - 202206425#
+line console 0
+ password redes1
+ login
+ logging synchronous
+ exit
+line vty 0 15
+ password redes1
+ login
+ exit
+! ---------- VTP (CLIENT) ----------
+vtp domain 202206425
+vtp password Cayala2026
+vtp version 2
+vtp mode client
+! ---------- Troncales ----------
+interface fastEthernet0/1
+ description TRUNK_A_SW-Z4-MAIN
+ switchport mode trunk
+ switchport trunk native vlan 99
+ switchport trunk allowed vlan 45,99
+ switchport nonegotiate
+ no shutdown
+ exit
+end
+write memory
+!
+! ############ FASE 2 (despues de verificar 'show vlan brief') ############
+enable
+configure terminal
+! ---------- Rapid PVST+ ----------
+spanning-tree mode rapid-pvst
+! ---------- Puertos de acceso (hosts) ----------
+interface range fastEthernet0/10 - 11
+ description HOSTS_Z4_COMERCIAL
+ switchport mode access
+ switchport access vlan 45
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+ no shutdown
+ exit
+! ---------- Puertos NO utilizados -> VLAN 999 BLACKHOLE ----------
+interface range fastEthernet0/2 - 9, fastEthernet0/12 - 24, gigabitEthernet0/1 - 2
+ description NO_UTILIZADO_BLACKHOLE
+ switchport mode access
+ switchport access vlan 999
+ shutdown
+ exit
+! ---------- Administracion (VLAN 99 nativa) ----------
+interface vlan 99
+ description ADMIN_NATIVA
+ ip address 192.168.5.200 255.255.255.224
+ no shutdown
+ exit
+ip default-gateway 192.168.5.193
+end
+write memory

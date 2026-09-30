@@ -1,0 +1,162 @@
+! =====================================================================
+!  Practica 2 - Redes de Computadoras 1 - 2S2026
+!  Red de la Ciudad Comercial Cayala   | Carnet: 202206425 (X = 5)
+!  Dispositivo : SW-Z1-CORE
+!  Modelo      : Cisco 3560-24PS (multicapa)
+!  Rol         : Switch principal Zona 1 / Core. VTP Server. Root VLAN 15 y 99. Gateway de todas las VLANs
+!  Uso: copiar y pegar en la CLI (modo usuario). Las lineas con "!" son
+!       comentarios y el IOS las ignora.
+! =====================================================================
+!
+! #################### FASE 1: base + VTP + troncales ####################
+enable
+configure terminal
+hostname SW-Z1-CORE
+no ip domain-lookup
+service password-encryption
+enable secret redes1
+banner motd #Acceso restringido - Red Ciudad Cayala - 202206425#
+line console 0
+ password redes1
+ login
+ logging synchronous
+ exit
+line vty 0 15
+ password redes1
+ login
+ exit
+! ---------- VTP (SERVER) ----------
+vtp domain 202206425
+vtp password Cayala2026
+vtp version 2
+vtp mode server
+! ---------- VLANs (SOLO se crean aqui; VTP las propaga) ----------
+vlan 15
+ name Z1_ADMINISTRACION
+vlan 25
+ name Z2_RESIDENCIAL
+vlan 35
+ name Z3_GASTRONOMIA
+vlan 45
+ name Z4_COMERCIAL
+vlan 55
+ name Z5_SEGURIDAD
+vlan 99
+ name NATIVA_ADMIN
+vlan 999
+ name BLACKHOLE
+ exit
+! ---------- EtherChannel Po1 (PAgP) hacia Zona 4 ----------
+interface range gigabitEthernet0/1 - 2
+ description PO1_PAgP_A_SW-Z4-MAIN
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+ switchport trunk native vlan 99
+ switchport trunk allowed vlan 45,55,99
+ channel-group 1 mode desirable
+ no shutdown
+ exit
+interface port-channel 1
+ description ETHERCHANNEL_A_ZONA4_COMERCIAL
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+ switchport trunk native vlan 99
+ switchport trunk allowed vlan 45,55,99
+ exit
+! ---------- Troncales ----------
+interface fastEthernet0/1
+ description TRUNK_A_SW-Z1-ACC1
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+ switchport trunk native vlan 99
+ switchport trunk allowed vlan 15,99
+ switchport nonegotiate
+ no shutdown
+ exit
+interface fastEthernet0/2
+ description TRUNK_A_SW-Z1-ACC2
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+ switchport trunk native vlan 99
+ switchport trunk allowed vlan 15,99
+ switchport nonegotiate
+ no shutdown
+ exit
+interface fastEthernet0/3
+ description TRUNK_A_SW-Z5-MAIN
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+ switchport trunk native vlan 99
+ switchport trunk allowed vlan 45,55,99
+ switchport nonegotiate
+ no shutdown
+ exit
+interface fastEthernet0/4
+ description TRUNK_A_SW-Z2-MAIN
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+ switchport trunk native vlan 99
+ switchport trunk allowed vlan 25,99
+ switchport nonegotiate
+ no shutdown
+ exit
+interface fastEthernet0/5
+ description TRUNK_A_SW-Z3-MAIN
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+ switchport trunk native vlan 99
+ switchport trunk allowed vlan 35,99
+ switchport nonegotiate
+ no shutdown
+ exit
+end
+write memory
+!
+! ############ FASE 2 (despues de verificar 'show vlan brief') ############
+enable
+configure terminal
+! ---------- Rapid PVST+ ----------
+spanning-tree mode rapid-pvst
+spanning-tree vlan 15,99 priority 4096
+spanning-tree vlan 25,35,45,55 priority 8192
+! ---------- Puertos NO utilizados -> VLAN 999 BLACKHOLE ----------
+interface range fastEthernet0/6 - 24
+ description NO_UTILIZADO_BLACKHOLE
+ switchport mode access
+ switchport access vlan 999
+ shutdown
+ exit
+! ---------- Enrutamiento Inter-VLAN (SVIs = default gateways) ----------
+ip routing
+interface vlan 15
+ description GW_Z1_ADMINISTRACION
+ ip address 192.168.5.1 255.255.255.192
+ no shutdown
+ exit
+interface vlan 45
+ description GW_Z4_COMERCIAL
+ ip address 192.168.5.65 255.255.255.192
+ no shutdown
+ exit
+interface vlan 25
+ description GW_Z2_RESIDENCIAL
+ ip address 192.168.5.129 255.255.255.224
+ no shutdown
+ exit
+interface vlan 35
+ description GW_Z3_GASTRONOMIA
+ ip address 192.168.5.161 255.255.255.240
+ no shutdown
+ exit
+interface vlan 55
+ description GW_Z5_SEGURIDAD
+ ip address 192.168.5.177 255.255.255.240
+ no shutdown
+ exit
+interface vlan 99
+ description GW_ADMIN_NATIVA
+ ip address 192.168.5.193 255.255.255.224
+ no shutdown
+ exit
+end
+write memory
