@@ -4,18 +4,18 @@ hostname R3-SUP
 no ip domain-lookup
 !
 interface GigabitEthernet0/0
- description Enlace hacia R1-INF G0/1
+ description Enlace hacia R1-INF G0/2
  ip address 10.10.10.2 255.255.255.252
  no shutdown
  exit
 !
-interface GigabitEthernet0/1
- description Enlace hacia R2-INF G0/1
+interface GigabitEthernet0/2
+ description Enlace hacia R2-INF G0/2
  ip address 10.10.10.6 255.255.255.252
  no shutdown
  exit
 !
-interface GigabitEthernet0/2
+interface GigabitEthernet0/1
  description LAN superior hacia PC-SUP
  ip address 192.168.20.1 255.255.255.0
  no shutdown

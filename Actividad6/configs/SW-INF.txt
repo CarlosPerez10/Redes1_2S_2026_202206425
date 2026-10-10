@@ -5,12 +5,15 @@ no ip domain-lookup
 !
 interface FastEthernet0/1
  description Hacia R1-INF G0/0
+ switchport mode access
  exit
 interface FastEthernet0/2
  description Hacia R2-INF G0/0
+ switchport mode access
  exit
 interface FastEthernet0/3
  description Hacia PC-INF
+ switchport mode access
  exit
 !
 end

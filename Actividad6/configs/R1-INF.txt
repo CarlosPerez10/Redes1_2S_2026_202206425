@@ -4,7 +4,7 @@ hostname R1-INF
 no ip domain-lookup
 !
 interface GigabitEthernet0/0
- description LAN inferior hacia SW-INF Fa0/1
+ description LAN inferior hacia SW-INF
  ip address 192.168.10.2 255.255.255.0
  standby 10 ip 192.168.10.1
  standby 10 priority 110
@@ -12,10 +12,14 @@ interface GigabitEthernet0/0
  no shutdown
  exit
 !
-interface GigabitEthernet0/1
+interface GigabitEthernet0/2
  description Enlace hacia R3-SUP G0/0
  ip address 10.10.10.1 255.255.255.252
  no shutdown
+ exit
+!
+interface GigabitEthernet0/1
+ shutdown
  exit
 !
 router ospf 1
