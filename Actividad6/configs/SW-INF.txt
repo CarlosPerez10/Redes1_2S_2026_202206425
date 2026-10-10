@@ -1,0 +1,17 @@
+enable
+configure terminal
+hostname SW-INF
+no ip domain-lookup
+!
+interface FastEthernet0/1
+ description Hacia R1-INF G0/0
+ exit
+interface FastEthernet0/2
+ description Hacia R2-INF G0/0
+ exit
+interface FastEthernet0/3
+ description Hacia PC-INF
+ exit
+!
+end
+write memory
