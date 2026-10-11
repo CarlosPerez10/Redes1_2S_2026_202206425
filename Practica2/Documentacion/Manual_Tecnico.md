@@ -9,11 +9,12 @@ Redes de Computadoras 1 · Segundo Semestre 2026
 
 | Campo | Valor |
 |---|---|
-| Estudiante | Carlos Javier Pérez Pocón |
+| Estudiante | Carlos |
 | Carnet | **202206425** |
 | Último dígito del carnet (X) | **5** (impar) |
 | Dominio VTP | `202206425` |
 | Protocolo EtherChannel | **PAgP** |
+| Capa de operación | Capa 2 (enlace de datos) |
 | Simulador | Cisco Packet Tracer |
 | Archivo de simulación | `PacketTracer/Practica2_202206425.pkt` |
 
@@ -31,13 +32,13 @@ Redes de Computadoras 1 · Segundo Semestre 2026
 9. [VTP](#9-vtp)
 10. [Rapid PVST+](#10-rapid-pvst)
 11. [EtherChannel](#11-etherchannel)
-12. [Enrutamiento inter-VLAN](#12-enrutamiento-inter-vlan)
+12. [Operación en capa 2 y aislamiento entre zonas](#12-operación-en-capa-2-y-aislamiento-entre-zonas)
 13. [Dominios de colisión y de broadcast](#13-dominios-de-colisión-y-de-broadcast)
 14. [Asignación de puertos por switch](#14-asignación-de-puertos-por-switch)
 15. [Seguridad aplicada](#15-seguridad-aplicada)
 16. [Procedimiento de implementación](#16-procedimiento-de-implementación)
 17. [Verificación de la configuración](#17-verificación-de-la-configuración)
-18. [Pruebas de conectividad](#18-pruebas-de-conectividad)
+18. [Pruebas de conectividad y aislamiento](#18-pruebas-de-conectividad-y-aislamiento)
 19. [Pruebas de alta disponibilidad](#19-pruebas-de-alta-disponibilidad)
 20. [Escalabilidad](#20-escalabilidad)
 21. [Guía rápida de resolución de problemas](#21-guía-rápida-de-resolución-de-problemas)
@@ -47,11 +48,9 @@ Redes de Computadoras 1 · Segundo Semestre 2026
 
 ## 1. Descripción general
 
-La empresa administradora de Ciudad Cayalá, en la zona 16 de la Ciudad de Guatemala, necesita interconectar sus zonas comerciales, residenciales, corporativas y de servicios. La solución es una red conmutada de capa 2 con **una VLAN por zona**. Las zonas se unen mediante troncales 802.1Q hacia un **switch multicapa Cisco 3560**, que funciona como núcleo de la red y como puerta de enlace de todas las VLANs por medio de SVIs.
+La empresa administradora de Ciudad Cayalá, en la zona 16 de la Ciudad de Guatemala, necesita interconectar las zonas comerciales, residenciales, corporativas y de servicios del complejo. La solución es una red conmutada que opera **únicamente en la capa de enlace de datos** del modelo OSI, segmentada con **una VLAN por zona**. Las zonas se unen mediante troncales 802.1Q hacia un núcleo formado por un switch Cisco 3560, que en esta práctica trabaja solo como switch de capa 2.
 
 El diseño no aplica el mismo esquema a todas las zonas. Cada una recibe un tipo de conexión según su función, su criticidad y su volumen de tráfico. En total se combinan cuatro esquemas de topología: **estrella extendida, malla parcial, anillo y bus**.
-
-Protocolos y tecnologías utilizados:
 
 | Tecnología | Uso en la red |
 |---|---|
@@ -59,7 +58,8 @@ Protocolos y tecnologías utilizados:
 | VTP v2 | Distribución de la base de datos de VLANs en el dominio `202206425` |
 | Rapid PVST+ | Prevención de bucles y convergencia rápida ante fallas |
 | EtherChannel PAgP | Agregación de 2 enlaces Gigabit hacia la zona comercial |
-| Enrutamiento inter-VLAN (SVI) | Comunicación controlada entre zonas desde el 3560 |
+
+Al no existir enrutamiento, cada zona es un dominio aislado: sus hosts se comunican entre sí, pero no con los de otras zonas. Este aislamiento es uno de los resultados que se verifican en la práctica.
 
 ---
 
@@ -97,14 +97,14 @@ Ciudad Cayalá es un desarrollo urbano de uso mixto inaugurado en 2011. Reúne b
 ### 3.1 Zona 1 — Distrito Empresarial / Administración Central (VLAN 15)
 - **Función:** oficinas de la empresa administradora del complejo: arrendamientos, facturación, mantenimiento y soporte de TI. Se ubica en el Distrito Empresarial, la etapa de edificios de oficinas de Cayalá.
 - **Usuarios:** personal administrativo, gerencia y técnicos.
-- **Tráfico:** es la zona con más hosts (60). Además, por aquí pasa el tráfico entre todas las zonas, porque en ella está el núcleo que enruta las VLANs.
-- **Impacto de una caída:** si esta zona pierde conectividad, se detiene la administración del complejo y ninguna zona puede comunicarse con otra.
-- **Decisión:** aloja el switch multicapa (núcleo). Sus dos switches de acceso forman un **anillo** con el núcleo, así cada grupo de hosts tiene dos caminos.
+- **Tráfico:** es la zona con más hosts (60). Además aloja el núcleo, por donde pasan todos los troncales de la red.
+- **Impacto de una caída:** se detiene la administración del complejo y, si falla el núcleo, todas las zonas quedan sin enlace con el resto de la red.
+- **Decisión:** aloja el switch núcleo. Sus dos switches de acceso forman un **anillo** con el núcleo, así cada grupo de hosts tiene dos caminos.
 
 ### 3.2 Zona 2 — Residencial Lirios de Cayalá (VLAN 25)
 - **Función:** servicios de red para el desarrollo residencial Lirios de Cayalá: garitas, áreas comunes y oficina de administración del condominio.
 - **Usuarios:** residentes y administración del condominio.
-- **Tráfico:** medio (28 hosts), principalmente navegación y servicios, sin los picos de la zona comercial.
+- **Tráfico:** medio (28 hosts), sin los picos de la zona comercial.
 - **Impacto de una caída:** afecta la comodidad de los residentes, pero no la operación comercial ni la seguridad del complejo.
 - **Decisión:** esquema **bus o lineal** (SW-Z2-MAIN → SW-Z2-ACC1) con un solo enlace al núcleo. Sigue el cableado natural por bloques de un área residencial y es la opción más económica para una zona no crítica.
 
@@ -113,7 +113,7 @@ Ciudad Cayalá es un desarrollo urbano de uso mixto inaugurado en 2011. Reúne b
 - **Usuarios:** personal de los locales.
 - **Tráfico:** bajo (12 hosts).
 - **Impacto de una caída:** es un servicio secundario; los locales pueden operar temporalmente sin la red del complejo.
-- **Decisión:** **estrella** simple, un único switch conectado al núcleo con un solo enlace. La redundancia no se justifica por costo y beneficio.
+- **Decisión:** **estrella** simple, un único switch conectado al núcleo con un solo enlace.
 
 ### 3.4 Zona 4 — Paseo Cayalá, zona comercial (VLAN 45)
 - **Función:** corazón comercial del complejo, con tiendas, kioscos de información, puntos de venta y señalización digital.
@@ -127,7 +127,7 @@ Ciudad Cayalá es un desarrollo urbano de uso mixto inaugurado en 2011. Reúne b
 - **Usuarios:** operadores de monitoreo y jefatura de seguridad.
 - **Tráfico:** pocos hosts (7), pero con flujo constante de video y alarmas.
 - **Impacto de una caída:** el complejo queda sin supervisión de seguridad.
-- **Decisión:** es una red pequeña, pero tiene **2 enlaces físicos**: uno al núcleo y otro a la Zona 4. Así se forma el triángulo Núcleo – Z4 – Z5 y un fallo en cualquiera de los dos enlaces no la deja aislada.
+- **Decisión:** red pequeña con **2 enlaces físicos**: uno al núcleo y otro a la Zona 4. Así se forma el triángulo Núcleo – Z4 – Z5 y un fallo en cualquiera de los dos enlaces no la deja aislada.
 
 ---
 
@@ -141,7 +141,7 @@ El diseño previo se elaboró en draw.io y se encuentra en [`../Topologia/Topolo
 
 | Esquema | Dónde se aplica | Motivo |
 |---|---|---|
-| **Estrella extendida** | Todas las zonas llegan a SW-Z1-CORE | Punto central de enrutamiento y administración |
+| **Estrella extendida** | Todas las zonas llegan a SW-Z1-CORE | Punto central de conmutación y administración |
 | **Malla parcial** | SW-Z1-CORE ↔ SW-Z4-MAIN ↔ SW-Z5-MAIN ↔ SW-Z1-CORE | Zonas críticas con al menos 2 enlaces físicos |
 | **Anillo** | SW-Z1-CORE ↔ SW-Z1-ACC1 ↔ SW-Z1-ACC2 ↔ SW-Z1-CORE | Dos caminos para cada switch de acceso de administración |
 | **Bus / lineal** | SW-Z1-CORE → SW-Z2-MAIN → SW-Z2-ACC1 | Zona residencial de criticidad media |
@@ -163,7 +163,7 @@ Se combinan **4 esquemas**; el mínimo requerido es 2.
 
 | Dispositivo | Modelo | Zona | Función | VTP | IP de administración |
 |---|---|---|---|---|---|
-| SW-Z1-CORE | Cisco 3560-24PS | 1 | Núcleo, enrutamiento inter-VLAN | Server | 192.168.5.193 |
+| SW-Z1-CORE | Cisco 3560-24PS | 1 | Núcleo de capa 2 | Server | 192.168.5.193 |
 | SW-Z1-ACC1 | Cisco 2960-24TT | 1 | Acceso | Client | 192.168.5.194 |
 | SW-Z1-ACC2 | Cisco 2960-24TT | 1 | Acceso | Client | 192.168.5.195 |
 | SW-Z2-MAIN | Cisco 2960-24TT | 2 | Principal de zona | Server | 192.168.5.196 |
@@ -174,7 +174,7 @@ Se combinan **4 esquemas**; el mínimo requerido es 2.
 | SW-Z5-MAIN | Cisco 2960-24TT | 5 | Principal de zona | Server | 192.168.5.201 |
 | PC-Z1-01 … PC-Z5-02 | PC-PT | 1–5 | Hosts representativos (14) | — | Ver sección 7.2 |
 
-Todos los switches se configuraron únicamente mediante CLI. En la simulación se colocaron hosts representativos por zona. El direccionamiento sí está dimensionado para la cantidad de hosts requerida en cada zona: 60, 28, 12, 50 y 7.
+Todos los switches se configuraron únicamente mediante CLI. El 3560 se eligió como núcleo por sus puertos Gigabit y su capacidad de conmutación; en esta práctica no tiene habilitado `ip routing`, por lo que se comporta como un switch de capa 2. En la simulación se colocaron hosts representativos por zona, pero el direccionamiento está dimensionado para la cantidad de hosts requerida: 60, 28, 12, 50 y 7.
 
 ---
 
@@ -184,11 +184,11 @@ Todos los switches se configuraron únicamente mediante CLI. En la simulación s
 |---|---|---|---|---|---|---|---|
 | 1 | SW-Z1-CORE Gi0/1 | SW-Z4-MAIN Gi0/1 | Copper Cross-Over | 1 Gbps | Trunk (Po1) | 45,55,99 | Primer miembro del EtherChannel hacia la zona de mayor tráfico comercial |
 | 2 | SW-Z1-CORE Gi0/2 | SW-Z4-MAIN Gi0/2 | Copper Cross-Over | 1 Gbps | Trunk (Po1) | 45,55,99 | Segundo miembro: duplica el ancho de banda y tolera la caída de un cable |
-| 3 | SW-Z1-CORE Fa0/3 | SW-Z5-MAIN Fa0/1 | Copper Cross-Over | 100 Mbps | Trunk | 45,55,99 | Enlace principal de Seguridad; transporta VLAN 45 como respaldo de Z4 |
+| 3 | SW-Z1-CORE Fa0/3 | SW-Z5-MAIN Fa0/1 | Copper Cross-Over | 100 Mbps | Trunk | 45,55,99 | Enlace principal de Seguridad; transporta la VLAN 45 como respaldo de Z4 |
 | 4 | SW-Z4-MAIN Fa0/1 | SW-Z5-MAIN Fa0/2 | Copper Cross-Over | 100 Mbps | Trunk | 45,55,99 | Cierra la malla parcial: segundo camino para Z4 y Z5 |
 | 5 | SW-Z1-CORE Fa0/4 | SW-Z2-MAIN Fa0/1 | Copper Cross-Over | 100 Mbps | Trunk | 25,99 | Único enlace de la zona residencial |
 | 6 | SW-Z2-MAIN Fa0/2 | SW-Z2-ACC1 Fa0/1 | Copper Cross-Over | 100 Mbps | Trunk | 25,99 | Extensión lineal hacia otro bloque residencial |
-| 7 | SW-Z1-CORE Fa0/5 | SW-Z3-MAIN Fa0/1 | Copper Cross-Over | 100 Mbps | Trunk | 35,99 | Único enlace de la zona gastronómica, de bajo tráfico |
+| 7 | SW-Z1-CORE Fa0/5 | SW-Z3-MAIN Fa0/1 | Copper Cross-Over | 100 Mbps | Trunk | 35,99 | Único enlace de la zona gastronómica |
 | 8 | SW-Z1-CORE Fa0/1 | SW-Z1-ACC1 Fa0/1 | Copper Cross-Over | 100 Mbps | Trunk | 15,99 | Lado A del anillo de administración |
 | 9 | SW-Z1-CORE Fa0/2 | SW-Z1-ACC2 Fa0/1 | Copper Cross-Over | 100 Mbps | Trunk | 15,99 | Lado B del anillo de administración |
 | 10 | SW-Z1-ACC1 Fa0/2 | SW-Z1-ACC2 Fa0/2 | Copper Cross-Over | 100 Mbps | Trunk | 15,99 | Cierra el anillo: respaldo si falla un enlace al núcleo |
@@ -201,22 +201,22 @@ Todos los switches se configuraron únicamente mediante CLI. En la simulación s
 
 Se combinan medios de **1 Gbps** en el EtherChannel y de **100 Mbps** en Fast Ethernet.
 
-**VLANs permitidas en troncales:** ningún troncal usa `allowed vlan all`. Cada uno transporta solo las VLANs de las zonas que dependen de ese camino, más la VLAN nativa 99. Esto evita que broadcasts de una zona viajen por enlaces donde no se necesitan. La malla parcial transporta las VLANs 45 y 55 para que ambas zonas tengan un camino alterno.
+**VLANs permitidas en troncales:** ningún troncal usa `allowed vlan all`. Cada uno transporta solo las VLANs de las zonas que dependen de ese camino, más la VLAN nativa 99, de modo que los broadcasts de una zona no viajan por enlaces donde no se necesitan. La malla parcial transporta las VLANs 45 y 55 para que ambas zonas tengan un camino alterno.
 
 ---
 
 ## 7. Direccionamiento IP (VLSM)
 
-La red base es **192.168.5.0/24**. Las subredes se asignaron de mayor a menor tamaño para no desperdiciar direcciones.
+La red base es **192.168.5.0/24**. Las subredes se asignaron de mayor a menor tamaño para no desperdiciar direcciones. Cada VLAN tiene su propia subred, lo que deja la red preparada para incorporar enrutamiento en el futuro sin cambiar el direccionamiento.
 
-| VLAN | Zona | Hosts requeridos | Prefijo | Red | Máscara | Rango utilizable | Broadcast | Gateway |
+| VLAN | Zona | Hosts requeridos | Prefijo | Red | Máscara | Rango utilizable | Broadcast | Gateway (reservado) |
 |---|---|---|---|---|---|---|---|---|
 | 15 | Z1 Administración | 60 | /26 | 192.168.5.0 | 255.255.255.192 | .1 – .62 | .63 | 192.168.5.1 |
 | 45 | Z4 Comercial | 50 | /26 | 192.168.5.64 | 255.255.255.192 | .65 – .126 | .127 | 192.168.5.65 |
 | 25 | Z2 Residencial | 28 | /27 | 192.168.5.128 | 255.255.255.224 | .129 – .158 | .159 | 192.168.5.129 |
 | 35 | Z3 Gastronomía | 12 | /28 | 192.168.5.160 | 255.255.255.240 | .161 – .174 | .175 | 192.168.5.161 |
 | 55 | Z5 Seguridad | 7 | /28 | 192.168.5.176 | 255.255.255.240 | .177 – .190 | .191 | 192.168.5.177 |
-| 99 | Administración de switches | 9 | /27 | 192.168.5.192 | 255.255.255.224 | .193 – .222 | .223 | 192.168.5.193 |
+| 99 | Administración de switches | 9 | /27 | 192.168.5.192 | 255.255.255.224 | .193 – .222 | .223 | — |
 | — | Reserva | — | /27 | 192.168.5.224 | 255.255.255.224 | .225 – .254 | .255 | — |
 
 Cálculo por zona (hosts + gateway ≤ 2ⁿ − 2):
@@ -226,18 +226,9 @@ Cálculo por zona (hosts + gateway ≤ 2ⁿ − 2):
 - Zona 3: 13 → /28 (14).
 - Zona 5: 8 → /28 (14). Un /29 solo tiene 6 utilizables.
 
-### 7.1 Gateways (SVIs de SW-Z1-CORE)
+**Default gateway:** cada host tiene configurado como gateway la primera dirección de su subred, tal como lo pide el enunciado. Esa dirección queda **reservada** para el dispositivo de capa 3 que se integre en las siguientes prácticas del curso (enrutamiento estático y dinámico). En esta práctica ningún equipo responde en esa dirección, por lo que el tráfico hacia otras zonas no sale de su VLAN.
 
-| Interfaz | IP | Máscara |
-|---|---|---|
-| Vlan15 | 192.168.5.1 | 255.255.255.192 |
-| Vlan25 | 192.168.5.129 | 255.255.255.224 |
-| Vlan35 | 192.168.5.161 | 255.255.255.240 |
-| Vlan45 | 192.168.5.65 | 255.255.255.192 |
-| Vlan55 | 192.168.5.177 | 255.255.255.240 |
-| Vlan99 | 192.168.5.193 | 255.255.255.224 |
-
-### 7.2 Hosts
+### 7.1 Hosts
 
 | Host | Switch / Puerto | VLAN | IP | Máscara | Gateway |
 |---|---|---|---|---|---|
@@ -257,6 +248,9 @@ Cálculo por zona (hosts + gateway ≤ 2ⁿ − 2):
 | PC-Z5-02 | SW-Z5-MAIN Fa0/11 | 55 | 192.168.5.179 | 255.255.255.240 | 192.168.5.177 |
 
 ![Configuración IP de PC-Z1-01](img/21_ip_pc_z1_01.png)
+
+### 7.2 Administración de switches (VLAN 99)
+Todos los switches tienen una SVI en la VLAN 99 dentro de la misma subred (192.168.5.192/27). Como todas las IPs de administración pertenecen a la misma red, los switches se alcanzan entre sí en capa 2 sin necesidad de gateway.
 
 ---
 
@@ -304,7 +298,7 @@ La VLAN nativa se cambió de 1 a 99 en todos los troncales. Así el tráfico sin
 
 ## 10. Rapid PVST+
 
-Todos los switches ejecutan `spanning-tree mode rapid-pvst`. Este modo mantiene una instancia de árbol por VLAN y converge en segundos, a diferencia del STP clásico, que tarda 30 a 50 segundos. Los puertos de hosts usan **PortFast** y **BPDU Guard**.
+Todos los switches ejecutan `spanning-tree mode rapid-pvst`. Este modo mantiene una instancia de árbol por VLAN y converge en segundos, a diferencia del STP clásico, que tarda entre 30 y 50 segundos. Los puertos de hosts usan **PortFast** y **BPDU Guard**.
 
 ### 10.1 Root bridge por VLAN
 
@@ -321,9 +315,9 @@ En PVST+ el switch anuncia su prioridad sumada al ID de la VLAN (*extended syste
 
 ### 10.2 Justificación
 1. El enunciado exige que el switch principal de cada zona sea el root de su VLAN. Se configuró la prioridad **4096** de forma explícita para no depender de la dirección MAC.
-2. El núcleo tiene prioridad **8192** en las VLANs de las demás zonas. Si el switch principal de una zona falla, el núcleo asume el rol de root y el árbol queda centrado en el punto de enrutamiento.
+2. El núcleo tiene prioridad **8192** en las VLANs de las demás zonas. Si el switch principal de una zona falla, el núcleo asume el rol de root y el árbol queda centrado en el punto de conmutación principal.
 3. La VLAN 99 viaja por todos los troncales, por eso su root es el núcleo.
-4. Con roots distintos por VLAN, los puertos bloqueados quedan en enlaces diferentes según la VLAN y la carga se reparte: la VLAN 45 sube por el EtherChannel y la VLAN 55 por el enlace directo Z5–Núcleo.
+4. Con roots distintos por VLAN, los puertos bloqueados quedan en enlaces diferentes según la VLAN y la carga se reparte: la VLAN 45 usa el EtherChannel y la VLAN 55 el enlace directo Z5–Núcleo.
 
 ### 10.3 Costos de ruta y puertos bloqueados
 
@@ -362,7 +356,7 @@ En PVST+ el switch anuncia su prioridad sumada al ID de la VLAN (*extended syste
 | Capacidad | 2 × 1 Gbps = 2 Gbps |
 | Configuración | Trunk 802.1Q, nativa 99, VLANs permitidas 45,55,99 |
 
-**Justificación:** la Zona 4 es la zona comercial de mayor afluencia del complejo y la segunda con más hosts (50). Todo su tráfico hacia otras zonas pasa por el núcleo, así que necesita más capacidad que un enlace simple. El EtherChannel suma el ancho de banda de ambos cables y reparte la carga entre ellos. Para STP es un solo enlace lógico, por lo que ninguno de los dos cables queda bloqueado. Si uno falla, el canal sigue activo con el otro.
+**Justificación:** la Zona 4 es la zona comercial de mayor afluencia del complejo y la segunda con más hosts (50). Su enlace hacia el núcleo es el de mayor carga de la red, por lo que necesita más capacidad que un enlace simple. El EtherChannel suma el ancho de banda de ambos cables y reparte la carga entre ellos. Para STP es un solo enlace lógico, por lo que ninguno de los dos cables queda bloqueado. Si uno falla, el canal sigue activo con el otro.
 
 **Modo `desirable`:** el puerto inicia activamente la negociación PAgP. Con `desirable` en ambos lados el canal se forma aunque uno de los dos extremos se reinicie.
 
@@ -376,16 +370,18 @@ En PVST+ el switch anuncia su prioridad sumada al ID de la VLAN (*extended syste
 
 ---
 
-## 12. Enrutamiento inter-VLAN
+## 12. Operación en capa 2 y aislamiento entre zonas
 
-Cada zona es un dominio de broadcast aislado. La comunicación entre zonas se hace en capa 3 dentro de SW-Z1-CORE:
-- `ip routing` habilita el enrutamiento en el 3560.
-- Cada VLAN tiene una **SVI** (`interface vlan X`) con la primera dirección utilizable de su subred, y esa SVI es el default gateway de los hosts de la zona.
-- Las redes aparecen en la tabla de enrutamiento como directamente conectadas (**C**) y locales (**L**). No se necesitan rutas estáticas ni protocolos dinámicos, porque todas las subredes terminan en el mismo equipo.
+La práctica se limita a la capa de enlace de datos. Por eso:
+- El 3560 **no tiene habilitado `ip routing`** ni interfaces VLAN para las zonas. Su única SVI es la de administración en la VLAN 99.
+- Los switches 2960 no tienen `ip default-gateway`, porque toda la administración está en una sola subred.
+- Cada VLAN es un dominio de broadcast cerrado. Un host solo puede comunicarse con hosts de su misma VLAN.
 
-Una SVI solo pasa a *up/up* si su VLAN existe y tiene al menos un puerto activo en estado forwarding. Por eso cada VLAN de zona está permitida en al menos un troncal del núcleo.
+Esta separación es intencional y forma parte de los resultados esperados: el objetivo SMART pide verificar la conectividad dentro de cada zona y el **aislamiento correcto entre VLANs distintas**. Cuando un host intenta comunicarse con otra zona, envía el paquete a su gateway reservado. Como ningún equipo responde a esa dirección, la solicitud ARP no obtiene respuesta y el paquete no sale de la VLAN.
 
-![Tabla de enrutamiento](img/19_ip_route_core.png)
+La salida de `show ip route` en el núcleo confirma que el equipo no está enrutando, y `show ip interface brief` muestra únicamente la SVI de la VLAN 99.
+
+![show ip route en el núcleo](img/19_show_ip_route_core.png)
 ![Interfaces del núcleo](img/20_ip_int_brief_core.png)
 
 ---
@@ -416,7 +412,7 @@ Cada puerto de un switch es un dominio de colisión independiente. Todos los enl
 | 5 | 55 | SW-Z1-CORE, SW-Z4-MAIN (respaldo), SW-Z5-MAIN y PCs de Z5 |
 | 6 | 99 | Todos los switches (administración) |
 
-Hay **6 dominios de broadcast activos**. La VLAN 999 no tiene puertos activos. El único equipo que comunica dominios distintos es el switch multicapa. Un broadcast ARP generado en la VLAN 15 nunca llega a la VLAN 45; así se logra el aislamiento de capa 2 entre zonas.
+Hay **6 dominios de broadcast activos**. La VLAN 999 no tiene puertos activos. Ningún dispositivo de la red interconecta dominios distintos, de modo que un broadcast ARP generado en la VLAN 15 nunca llega a la VLAN 45.
 
 ![ARP limitado a la VLAN 15 en modo simulación](img/35_simulacion_arp_vlan.png)
 
@@ -456,8 +452,6 @@ Los scripts completos de cada switch están en [`../Scripts`](../Scripts).
 | Cifrado de contraseñas | `service password-encryption` | Las contraseñas no se muestran en texto plano |
 | Banner | `banner motd` | Aviso de acceso restringido |
 
-**Credenciales de la práctica**
-
 | Acceso | Contraseña |
 |---|---|
 | Consola / VTY | `redes1` |
@@ -471,9 +465,9 @@ Los scripts completos de cada switch están en [`../Scripts`](../Scripts).
 1. **Montaje físico:** colocar los 9 switches y las 14 PCs y cablear según la sección 6, eligiendo cada puerto manualmente.
 2. **Fase 1 de configuración** (todos los switches, empezando por SW-Z1-CORE): configuración base, VTP, VLANs (solo en el núcleo), troncales y EtherChannel.
 3. **Verificación intermedia:** `show vlan brief` en cada switch hasta ver las VLANs 15, 25, 35, 45, 55, 99 y 999.
-4. **Fase 2 de configuración:** Rapid PVST+, puertos de acceso, Blackhole, SVIs de administración y enrutamiento en el núcleo.
-5. **Hosts:** IP, máscara y gateway estáticos según la sección 7.2.
-6. **Pruebas:** conectividad intra-VLAN, entre zonas, simulación ARP/ICMP y alta disponibilidad.
+4. **Fase 2 de configuración:** Rapid PVST+, puertos de acceso, Blackhole y SVI de administración en la VLAN 99.
+5. **Hosts:** IP, máscara y gateway estáticos según la sección 7.1.
+6. **Pruebas:** conectividad dentro de cada zona, aislamiento entre zonas, simulación ARP/ICMP y alta disponibilidad.
 
 Dividir la configuración en dos fases evita que un servidor VTP cree VLANs por su cuenta al asignar un puerto de acceso a una VLAN que todavía no conoce.
 
@@ -488,73 +482,88 @@ Dividir la configuración en dos fases evita que un servidor VTP cree VLANs por 
 | `show interfaces trunk` | Troncales activos, VLAN nativa y VLANs permitidas |
 | `show etherchannel summary` | Estado del Port-channel y de sus miembros |
 | `show spanning-tree vlan X` | Root bridge, prioridad y rol de cada puerto |
-| `show ip route` | Redes conectadas en el núcleo |
-| `show ip interface brief` | Estado de las SVIs |
+| `show ip route` | Que el núcleo no realiza enrutamiento |
+| `show ip interface brief` | Que solo existe la SVI de administración |
 
 ![Troncales en SW-Z1-CORE](img/08_trunk_core.png)
 ![Troncales en SW-Z4-MAIN](img/09_trunk_z4_main.png)
 
 ---
 
-## 18. Pruebas de conectividad
+## 18. Pruebas de conectividad y aislamiento
 
-### 18.1 Intra-VLAN
+### 18.1 Conectividad dentro de cada zona (intra-VLAN)
 ![Ping intra Zona 1](img/22_ping_intra_z1.png)
 ![Ping intra Zona 2](img/23_ping_intra_z2.png)
 ![Ping intra Zona 3](img/24_ping_intra_z3.png)
 ![Ping intra Zona 4](img/25_ping_intra_z4.png)
 ![Ping intra Zona 5](img/26_ping_intra_z5.png)
 
-### 18.2 Entre zonas
-![Zona 1 a Zona 2](img/27_ping_inter_z1_z2.png)
-![Zona 1 a Zona 3](img/28_ping_inter_z1_z3.png)
-![Zona 1 a Zona 4](img/29_ping_inter_z1_z4.png)
-![Zona 1 a Zona 5](img/30_ping_inter_z1_z5.png)
-![Zona 4 a Zona 5](img/31_ping_inter_z4_z5.png)
+### 18.2 Aislamiento entre zonas
+Los pings hacia hosts de otras zonas no reciben respuesta, lo que confirma que cada VLAN es un dominio aislado.
+
+![Zona 1 hacia Zona 2](img/27_aislamiento_z1_z2.png)
+![Zona 1 hacia Zona 3](img/28_aislamiento_z1_z3.png)
+![Zona 1 hacia Zona 4](img/29_aislamiento_z1_z4.png)
+![Zona 1 hacia Zona 5](img/30_aislamiento_z1_z5.png)
+![Zona 4 hacia Zona 5](img/31_aislamiento_z4_z5.png)
 
 ### 18.3 Resumen de pruebas
 
-| # | Origen | Destino | Tipo | Resultado |
-|---|---|---|---|---|
-| 1 | PC-Z1-01 | PC-Z1-04 | Intra-VLAN 15 | Exitoso |
-| 2 | PC-Z1-02 | PC-Z1-03 | Intra-VLAN 15 | Exitoso |
-| 3 | PC-Z2-01 | PC-Z2-03 | Intra-VLAN 25 | Exitoso |
-| 4 | PC-Z3-01 | PC-Z3-02 | Intra-VLAN 35 | Exitoso |
-| 5 | PC-Z4-01 | PC-Z4-03 | Intra-VLAN 45 | Exitoso |
-| 6 | PC-Z4-02 | PC-Z4-03 | Intra-VLAN 45 | Exitoso |
-| 7 | PC-Z5-01 | PC-Z5-02 | Intra-VLAN 55 | Exitoso |
-| 8 | PC-Z1-01 | PC-Z2-02 | Entre zonas | Exitoso |
-| 9 | PC-Z1-01 | PC-Z3-01 | Entre zonas | Exitoso |
-| 10 | PC-Z1-01 | PC-Z4-02 | Entre zonas | Exitoso |
-| 11 | PC-Z1-01 | PC-Z5-01 | Entre zonas | Exitoso |
-| 12 | PC-Z4-03 | PC-Z5-02 | Entre zonas | Exitoso |
-| 13 | PC-Z2-03 | PC-Z3-02 | Entre zonas | Exitoso |
+| # | Origen | Destino | Tipo | Resultado esperado | Resultado |
+|---|---|---|---|---|---|
+| 1 | PC-Z1-01 | PC-Z1-02 | Intra-VLAN 15 | Exitoso | Exitoso |
+| 2 | PC-Z1-01 | PC-Z1-04 | Intra-VLAN 15 (cruza el anillo) | Exitoso | Exitoso |
+| 3 | PC-Z1-02 | PC-Z1-03 | Intra-VLAN 15 (cruza el anillo) | Exitoso | Exitoso |
+| 4 | PC-Z2-01 | PC-Z2-02 | Intra-VLAN 25 | Exitoso | Exitoso |
+| 5 | PC-Z2-01 | PC-Z2-03 | Intra-VLAN 25 | Exitoso | Exitoso |
+| 6 | PC-Z3-01 | PC-Z3-02 | Intra-VLAN 35 | Exitoso | Exitoso |
+| 7 | PC-Z4-01 | PC-Z4-02 | Intra-VLAN 45 | Exitoso | Exitoso |
+| 8 | PC-Z4-01 | PC-Z4-03 | Intra-VLAN 45 | Exitoso | Exitoso |
+| 9 | PC-Z4-02 | PC-Z4-03 | Intra-VLAN 45 | Exitoso | Exitoso |
+| 10 | PC-Z5-01 | PC-Z5-02 | Intra-VLAN 55 | Exitoso | Exitoso |
+| 11 | PC-Z1-03 | PC-Z1-04 | Intra-VLAN 15 | Exitoso | Exitoso |
+| 12 | PC-Z1-01 | PC-Z2-02 | Entre VLANs 15 → 25 | Sin respuesta | Sin respuesta |
+| 13 | PC-Z1-01 | PC-Z4-02 | Entre VLANs 15 → 45 | Sin respuesta | Sin respuesta |
+| 14 | PC-Z4-03 | PC-Z5-02 | Entre VLANs 45 → 55 | Sin respuesta | Sin respuesta |
+| 15 | PC-Z2-03 | PC-Z3-02 | Entre VLANs 25 → 35 | Sin respuesta | Sin respuesta |
 
-![PDUs exitosos](img/32_pdu_list_exitosos.png)
+Se registraron **11 pruebas intra-VLAN exitosas** (el objetivo pedía al menos 10) y **4 pruebas que confirman el aislamiento** entre VLANs.
+
+![Lista de PDUs](img/32_pdu_list.png)
 
 ### 18.4 Flujo ARP e ICMP
-1. PC-Z1-01 necesita llegar a PC-Z5-01, que está en otra red, así que envía el paquete a su gateway 192.168.5.1.
-2. Como no conoce la MAC del gateway, envía un **ARP Request** de broadcast. Este broadcast solo recorre los puertos de la VLAN 15 y los troncales que la permiten.
-3. La SVI Vlan15 del núcleo responde con un **ARP Reply**.
-4. El **ICMP Echo Request** llega al núcleo, que lo enruta hacia la SVI Vlan55. Si hace falta, el núcleo hace un nuevo ARP dentro de la VLAN 55 y entrega el paquete a PC-Z5-01.
-5. El **Echo Reply** regresa por el mismo camino en sentido inverso.
+**Dentro de la misma VLAN (PC-Z1-01 → PC-Z1-04):**
+1. PC-Z1-01 detecta que el destino está en su misma red y envía un **ARP Request** de broadcast preguntando por 192.168.5.5.
+2. El broadcast recorre solo los puertos de la VLAN 15 y los troncales que la permiten (SW-Z1-ACC1, SW-Z1-CORE y SW-Z1-ACC2). Ningún host de otra zona lo recibe.
+3. PC-Z1-04 responde con un **ARP Reply** unicast.
+4. El **ICMP Echo Request** viaja directamente entre ambos hosts y regresa el **Echo Reply**.
 
-![ICMP atravesando el núcleo](img/36_simulacion_icmp.png)
+**Hacia otra VLAN (PC-Z1-01 → PC-Z5-01):**
+1. PC-Z1-01 detecta que el destino está en otra red y debe enviar el paquete a su gateway 192.168.5.1.
+2. Envía un ARP Request por el gateway dentro de la VLAN 15.
+3. Ningún equipo tiene esa dirección, así que no hay respuesta y el paquete ICMP se descarta en el origen.
 
-### 18.5 Administración de switches
+![Aislamiento en modo simulación](img/36_simulacion_aislamiento.png)
+
+### 18.5 Administración de switches (VLAN 99)
+Desde el núcleo se alcanzan las IPs de administración de los demás switches, todas en la VLAN 99.
+
 ![Ping a las IPs de administración](img/37_ping_admin_switches.png)
 
 ---
 
 ## 19. Pruebas de alta disponibilidad
 
+Como el tráfico de cada zona no sale de su VLAN, la disponibilidad de los enlaces entre zonas se comprobó con la VLAN 99, que recorre todos los troncales.
+
 ### 19.1 Falla de un miembro del EtherChannel
-Se apagó `Gi0/1` en SW-Z1-CORE mientras corría un ping continuo de PC-Z1-01 a PC-Z4-02. El Port-channel siguió en estado `SU` con Gi0/2 y el ping no se interrumpió.
+Se apagó `Gi0/1` en SW-Z1-CORE. El Port-channel siguió en estado `SU` con Gi0/2 y el núcleo mantuvo la comunicación con SW-Z4-ACC1 (192.168.5.200), cuyo camino pasa por el EtherChannel.
 
 ![Falla de Gi0/1](img/33_ha_falla_gi01_etherchannel.png)
 
 ### 19.2 Falla del enlace Núcleo ↔ Zona 5
-Se apagó `Fa0/3` en SW-Z1-CORE mientras corría un ping continuo de PC-Z1-01 a PC-Z5-01. Rapid PVST+ reconvergió y el puerto raíz de la VLAN 55 en el núcleo pasó a ser **Po1**. El tráfico siguió el camino Núcleo → Po1 → SW-Z4-MAIN → SW-Z5-MAIN, y el ping se recuperó tras la reconvergencia.
+Se apagó `Fa0/3` en SW-Z1-CORE. Rapid PVST+ reconvergió: en SW-Z5-MAIN el puerto raíz de la VLAN 99 pasó a ser `Fa0/2` y el tráfico siguió el camino Núcleo → Po1 → SW-Z4-MAIN → SW-Z5-MAIN. El ping del núcleo a SW-Z5-MAIN (192.168.5.201) respondió después de la reconvergencia.
 
 ![Falla del enlace a Zona 5](img/34_ha_falla_core_z5.png)
 
@@ -572,6 +581,7 @@ Al finalizar ambas pruebas se restauraron las interfaces con `no shutdown`.
 - El bloque **192.168.5.224/27** queda libre para una sexta zona o para ampliar otra.
 - Cada switch 2960 tiene 24 puertos Fast Ethernet. Los puertos libres ya están en la VLAN 999, así que para habilitar un host basta asignar el puerto a la VLAN de su zona y activarlo con `no shutdown`.
 - Una nueva VLAN se crea una sola vez en SW-Z1-CORE y VTP la propaga a todo el dominio. Después se agrega a la lista `allowed vlan` de los troncales que la necesiten.
+- El direccionamiento por subred y los gateways reservados permiten incorporar enrutamiento entre zonas más adelante sin modificar la configuración de los hosts.
 - Si la Zona 5 aumenta su tráfico de video, el enlace directo al núcleo puede convertirse en un segundo EtherChannel.
 
 ---
@@ -582,11 +592,11 @@ Al finalizar ambas pruebas se restauraron las interfaces con `no shutdown`.
 |---|---|---|
 | Un switch no tiene las VLANs | Dominio o contraseña VTP diferente | `show vtp status` / `show vtp password` y corregir |
 | `%CDP-4-NATIVE_VLAN_MISMATCH` | VLAN nativa distinta en los extremos | `switchport trunk native vlan 99` en ambos lados |
-| `Po1(SD)` y puertos `(I)` | PAgP no negoció con el otro extremo | Igualar la configuración de miembros, recrear el canal y reiniciar ambos switches |
+| `Po1(SD)` y puertos `(I)` | PAgP no negoció con el otro extremo | Igualar la configuración de los miembros, recrear el canal y reiniciar ambos switches |
 | Puertos del canal en `(s)` | Configuración distinta entre miembros | Configurarlos con `interface range` |
-| SVI en `down` | VLAN sin puertos activos en el núcleo | Revisar VLANs permitidas en los troncales |
-| Primer ping con un *timeout* | Resolución ARP inicial | Comportamiento normal; repetir el ping |
+| Ping intra-VLAN falla | Puerto de acceso en otra VLAN o VLAN no permitida en algún troncal | `show vlan brief` y `show interfaces trunk` en el camino |
 | Puerto de host apagado (err-disabled) | BPDU Guard detectó un switch | Retirar el equipo y hacer `shutdown` / `no shutdown` |
+| Primer ping con un *timeout* | Resolución ARP inicial | Comportamiento normal; repetir el ping |
 
 ---
 

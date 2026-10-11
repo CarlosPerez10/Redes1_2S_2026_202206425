@@ -4,8 +4,8 @@
 !  Dispositivo : SW-Z2-ACC1
 !  Modelo      : Cisco 2960-24TT
 !  Rol         : Acceso Zona 2 (Residencial). VTP Client
-!  Uso: copiar y pegar en la CLI (modo usuario). Las lineas con "!" son
-!       comentarios y el IOS las ignora.
+!  Configuracion exclusivamente de capa 2 (sin enrutamiento).
+!  Las lineas con "!" son comentarios y el IOS las ignora.
 ! =====================================================================
 !
 ! #################### FASE 1: base + VTP + troncales ####################
@@ -69,6 +69,5 @@ interface vlan 99
  ip address 192.168.5.197 255.255.255.224
  no shutdown
  exit
-ip default-gateway 192.168.5.193
 end
 write memory

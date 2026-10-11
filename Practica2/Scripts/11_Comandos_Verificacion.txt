@@ -1,17 +1,16 @@
 ! =====================================================================
-!  Comandos de verificacion (usar para las capturas)
+!  Practica 2 - Comandos de verificacion utilizados
 ! =====================================================================
 show vtp status
 show vlan brief
 show interfaces trunk
 show etherchannel summary
-show etherchannel port-channel
 show spanning-tree vlan 15
 show spanning-tree vlan 25
 show spanning-tree vlan 35
 show spanning-tree vlan 45
 show spanning-tree vlan 55
-show spanning-tree summary
-show ip route                 ! solo SW-Z1-CORE
-show ip interface brief
+show spanning-tree vlan 99
+show ip route              ! SW-Z1-CORE: evidencia de que no enruta
+show ip interface brief    ! SW-Z1-CORE: solo la SVI de administracion
 show running-config

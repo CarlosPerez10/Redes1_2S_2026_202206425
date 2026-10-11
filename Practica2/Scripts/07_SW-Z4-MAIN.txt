@@ -3,9 +3,9 @@
 !  Red de la Ciudad Comercial Cayala   | Carnet: 202206425 (X = 5)
 !  Dispositivo : SW-Z4-MAIN
 !  Modelo      : Cisco 2960-24TT
-!  Rol         : Switch principal Zona 4 (Paseo Cayala - Comercial). VTP Server. Root VLAN 45
-!  Uso: copiar y pegar en la CLI (modo usuario). Las lineas con "!" son
-!       comentarios y el IOS las ignora.
+!  Rol         : Principal Zona 4 (Paseo Cayala - Comercial). VTP Server. Root VLAN 45
+!  Configuracion exclusivamente de capa 2 (sin enrutamiento).
+!  Las lineas con "!" son comentarios y el IOS las ignora.
 ! =====================================================================
 !
 ! #################### FASE 1: base + VTP + troncales ####################
@@ -30,7 +30,7 @@ vtp domain 202206425
 vtp password Cayala2026
 vtp version 2
 vtp mode server
-! ---------- EtherChannel Po1 (PAgP) hacia el Core ----------
+! ---------- EtherChannel Po1 (PAgP) hacia el nucleo ----------
 interface range gigabitEthernet0/1 - 2
  description PO1_PAgP_A_SW-Z1-CORE
  switchport mode trunk
@@ -93,6 +93,5 @@ interface vlan 99
  ip address 192.168.5.199 255.255.255.224
  no shutdown
  exit
-ip default-gateway 192.168.5.193
 end
 write memory

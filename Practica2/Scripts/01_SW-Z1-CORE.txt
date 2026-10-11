@@ -2,10 +2,10 @@
 !  Practica 2 - Redes de Computadoras 1 - 2S2026
 !  Red de la Ciudad Comercial Cayala   | Carnet: 202206425 (X = 5)
 !  Dispositivo : SW-Z1-CORE
-!  Modelo      : Cisco 3560-24PS (multicapa)
-!  Rol         : Switch principal Zona 1 / Core. VTP Server. Root VLAN 15 y 99. Gateway de todas las VLANs
-!  Uso: copiar y pegar en la CLI (modo usuario). Las lineas con "!" son
-!       comentarios y el IOS las ignora.
+!  Modelo      : Cisco 3560-24PS (operando en capa 2)
+!  Rol         : Switch principal Zona 1 / nucleo de capa 2. VTP Server. Root VLAN 15 y 99
+!  Configuracion exclusivamente de capa 2 (sin enrutamiento).
+!  Las lineas con "!" son comentarios y el IOS las ignora.
 ! =====================================================================
 !
 ! #################### FASE 1: base + VTP + troncales ####################
@@ -126,35 +126,9 @@ interface range fastEthernet0/6 - 24
  switchport access vlan 999
  shutdown
  exit
-! ---------- Enrutamiento Inter-VLAN (SVIs = default gateways) ----------
-ip routing
-interface vlan 15
- description GW_Z1_ADMINISTRACION
- ip address 192.168.5.1 255.255.255.192
- no shutdown
- exit
-interface vlan 45
- description GW_Z4_COMERCIAL
- ip address 192.168.5.65 255.255.255.192
- no shutdown
- exit
-interface vlan 25
- description GW_Z2_RESIDENCIAL
- ip address 192.168.5.129 255.255.255.224
- no shutdown
- exit
-interface vlan 35
- description GW_Z3_GASTRONOMIA
- ip address 192.168.5.161 255.255.255.240
- no shutdown
- exit
-interface vlan 55
- description GW_Z5_SEGURIDAD
- ip address 192.168.5.177 255.255.255.240
- no shutdown
- exit
+! ---------- Administracion (VLAN 99 nativa) ----------
 interface vlan 99
- description GW_ADMIN_NATIVA
+ description ADMIN_NATIVA
  ip address 192.168.5.193 255.255.255.224
  no shutdown
  exit

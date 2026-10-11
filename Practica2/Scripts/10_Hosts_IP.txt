@@ -1,6 +1,9 @@
 =====================================================================
  Practica 2 - Configuracion IP de hosts (Desktop > IP Configuration)
  Carnet 202206425 | Red base 192.168.5.0/24 (VLSM)
+ El gateway es la primera direccion de cada subred. Queda reservado
+ para el dispositivo de capa 3 que se integre en practicas posteriores;
+ en esta practica la red opera unicamente en capa 2.
 =====================================================================
 HOST        SWITCH / PUERTO          VLAN  IP              MASCARA           GATEWAY
 ----------  -----------------------  ----  --------------  ----------------  -------------
