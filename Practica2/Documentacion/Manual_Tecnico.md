@@ -9,7 +9,7 @@ Redes de Computadoras 1 · Segundo Semestre 2026
 
 | Campo | Valor |
 |---|---|
-| Estudiante | Carlos |
+| Estudiante | Carlos Javier Pérez Pocón |
 | Carnet | **202206425** |
 | Último dígito del carnet (X) | **5** (impar) |
 | Dominio VTP | `202206425` |

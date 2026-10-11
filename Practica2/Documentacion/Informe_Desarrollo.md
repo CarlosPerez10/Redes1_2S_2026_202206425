@@ -4,7 +4,7 @@
 | Campo | Valor |
 |---|---|
 | Curso | Redes de Computadoras 1 — Segundo Semestre 2026 |
-| Estudiante | Carlos |
+| Estudiante | Carlos Javier Pérez Pocón |
 | Carnet | 202206425 |
 
 ---
